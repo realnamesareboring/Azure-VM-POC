@@ -34,6 +34,7 @@ variable "region1-vnet1-snet1-name" {
   description = "subnet name"
   type        = string
 }
+/*
 variable "region1-vnet1-snet2-name" {
   description = "subnet name"
   type        = string
@@ -42,6 +43,7 @@ variable "region1-vnet1-snet3-name" {
   description = "subnet name"
   type        = string
 }
+*/
 variable "region1-vnet2-snet1-name" {
   description = "subnet name"
   type        = string
@@ -58,6 +60,11 @@ variable "region1-vnet1-snet1-range" {
   description = "subnet range"
   type        = string
 }
+variable "region1-vnet1-snetfw-range" {
+  description = "subnet range"
+  type        = string
+}
+/*
 variable "region1-vnet1-snet2-range" {
   description = "subnet range"
   type        = string
@@ -66,6 +73,7 @@ variable "region1-vnet1-snet3-range" {
   description = "subnet range"
   type        = string
 }
+*/
 variable "region1-vnet2-snet1-range" {
   description = "subnet range"
   type        = string
@@ -78,11 +86,19 @@ variable "region1-vnet2-snet3-range" {
   description = "subnet range"
   type        = string
 }
+variable "region1-vnet1-snetfw-name" {
+  description = "subnet name"
+  type        = string
+}
 variable "vmsize-domaincontroller" {
   description = "size of vm for domain controller"
   type        = string
 }
 variable "adminusername" {
   description = "administrator username for virtual machines"
+  type        = string
+}
+variable "region1-spoke-address-space" {
+  description = "remote address space for VPN"
   type        = string
 }
