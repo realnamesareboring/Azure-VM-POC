@@ -16,9 +16,9 @@ resource "azurerm_resource_group" "rg2" {
     Function    = "AZVM-POC-RG-2"
   }
 }
-/* Working
+#Working
 #Test powershell script
-resource "null_resource" "PowerShellScriptRunAlways" {
+resource "null_resource" "AzureDiskEncryption" {
     triggers = {
         trigger = "${uuid()}"
     }
@@ -28,7 +28,6 @@ resource "null_resource" "PowerShellScriptRunAlways" {
         interpreter = ["PowerShell", "-Command"]
     }
 }
-*/
 
 #VNETs and Subnets
 #Hub VNET and Subnets
@@ -479,29 +478,6 @@ resource "azurerm_virtual_machine_extension" "region1-dc01-setup" {
   SETTINGS
 }
 
-resource "azurerm_virtual_machine_extension" "region1-dc01-diskencrypt" {
-  name                 = "AZVM-dc01-diskencrypt"
-  virtual_machine_id   = azurerm_windows_virtual_machine.region1-dc01-vm.id
-  depends_on           = [azurerm_virtual_machine_data_disk_attachment.region1-dc01-data]
-  publisher            = "Microsoft.Compute"
-  type                 = "CustomScriptExtension"
-  type_handler_version = "1.9"
-
-  protected_settings = <<PROTECTED_SETTINGS
-    {
-      "commandToExecute": "powershell.exe -Command \"./AzureDiskEncryption.ps1; exit 0;\""
-    }
-  PROTECTED_SETTINGS
-
-  settings = <<SETTINGS
-    {
-        "fileUris": [
-          "https://raw.githubusercontent.com/realnamesareboring/Azure-VM-POC/main/PowerShell/AzureDiskEncryption.ps1"
-        ]
-    }
-  SETTINGS
-}
-/*
 #Test powershell script
 resource "null_resource" "PowerShellScriptRunAlways" {
     triggers = {
@@ -513,7 +489,7 @@ resource "null_resource" "PowerShellScriptRunAlways" {
         interpreter = ["PowerShell", "-Command"]
     }
 }
-*/
+
 #Azure Firewall Setup - Added 7/14
 #Public IP
 resource "azurerm_public_ip" "region1-fw01-pip" {
