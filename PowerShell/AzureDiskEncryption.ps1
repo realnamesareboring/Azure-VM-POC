@@ -1,4 +1,4 @@
-﻿#Working!
+#Working!
 Import-Module Az.KeyVault
 $vm = "region1-dc01-vm"
 $rg = "region1-eastus2-spoke"
