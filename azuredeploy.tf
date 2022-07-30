@@ -16,9 +16,11 @@ resource "azurerm_resource_group" "rg2" {
     Function    = "AZVM-POC-RG-2"
   }
 }
+/*
 #Working
 #Test powershell script
 resource "null_resource" "AzureDiskEncryption" {
+    depends_on = [azurerm_resource_group.rg2]
     triggers = {
         trigger = "${uuid()}"
     }
@@ -28,7 +30,7 @@ resource "null_resource" "AzureDiskEncryption" {
         interpreter = ["PowerShell", "-Command"]
     }
 }
-
+*/
 #VNETs and Subnets
 #Hub VNET and Subnets
 resource "azurerm_virtual_network" "region1-vnet1-hub1" {
@@ -479,7 +481,8 @@ resource "azurerm_virtual_machine_extension" "region1-dc01-setup" {
 }
 
 #Test powershell script
-resource "null_resource" "PowerShellScriptRunAlways" {
+resource "null_resource" "AzureDiskEncrypt" {
+    depends_on = [azurerm_resource_group.rg2]
     triggers = {
         trigger = "${uuid()}"
     }
@@ -489,6 +492,7 @@ resource "null_resource" "PowerShellScriptRunAlways" {
         interpreter = ["PowerShell", "-Command"]
     }
 }
+
 
 #Azure Firewall Setup - Added 7/14
 #Public IP
