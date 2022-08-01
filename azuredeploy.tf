@@ -1,36 +1,22 @@
-#Resource Groups
+#Hub Resource Group
 resource "azurerm_resource_group" "rg1" {
   name     = var.azure-rg-1
   location = var.loc1
   tags = {
     Environment = var.environment_tag
-    Function    = "AZVM-POC-RG-1"
+    Function    = "region1-eastus2-hub"
   }
 }
-#Resource Groups
+#Spoke Resrouce Group
 resource "azurerm_resource_group" "rg2" {
   name     = var.azure-rg-2
   location = var.loc1
   tags = {
     Environment = var.environment_tag
-    Function    = "AZVM-POC-RG-2"
+    Function    = "region1-eastus2-spoke"
   }
 }
-/*
-#Working
-#Test powershell script
-resource "null_resource" "AzureDiskEncryption" {
-    depends_on = [azurerm_resource_group.rg2]
-    triggers = {
-        trigger = "${uuid()}"
-    }
 
-    provisioner "local-exec" {
-        command = ".'${path.module}\\PowerShell\\AzureDiskEncryption.ps1'"
-        interpreter = ["PowerShell", "-Command"]
-    }
-}
-*/
 #VNETs and Subnets
 #Hub VNET and Subnets
 resource "azurerm_virtual_network" "region1-vnet1-hub1" {
@@ -41,7 +27,7 @@ resource "azurerm_virtual_network" "region1-vnet1-hub1" {
   dns_servers         = ["10.10.1.4", "8.8.8.8"]
   tags = {
     Environment = var.environment_tag
-    Function    = "AZFW-vnet"
+    Function    = "region1-vnet1-hub"
   }
 }
 resource "azurerm_subnet" "region1-vnet1-snet1" {
@@ -56,21 +42,7 @@ resource "azurerm_subnet" "region1-vnet1-snetfw" {
   virtual_network_name = azurerm_virtual_network.region1-vnet1-hub1.name
   address_prefixes     = [var.region1-vnet1-snetfw-range]
 }
-/* may not need
-resource "azurerm_subnet" "region1-vnet1-snet2" {
-  name                 = var.region1-vnet1-snet2-name
-  resource_group_name  = azurerm_resource_group.rg1.name
-  virtual_network_name = azurerm_virtual_network.region1-vnet1-hub1.name
-  address_prefixes     = [var.region1-vnet1-snet2-range]
-}
-resource "azurerm_subnet" "region1-vnet1-snet3" {
-  name                 = var.region1-vnet1-snet3-name
-  resource_group_name  = azurerm_resource_group.rg1.name
-  virtual_network_name = azurerm_virtual_network.region1-vnet1-hub1.name
-  address_prefixes     = [var.region1-vnet1-snet3-range]
-}
-*/
-# TESTING VAULT - DISABLED 7/27
+
 #Spoke VNET and Subnets 
 resource "azurerm_virtual_network" "region1-vnet2-spoke1" {
   name                = var.region1-vnet2-name
@@ -80,7 +52,7 @@ resource "azurerm_virtual_network" "region1-vnet2-spoke1" {
   dns_servers         = ["10.10.1.4", "8.8.8.8"]
   tags = {
     Environment = var.environment_tag
-    Function    = "AZVM-vnet"
+    Function    = "region1-vnet1-spoke"
   }
 }
 resource "azurerm_subnet" "region1-vnet2-snet1" {
@@ -131,7 +103,7 @@ resource "azurerm_network_security_group" "region1-nsg" {
   name                = "region1-nsg"
   location            = var.loc1
   resource_group_name = azurerm_resource_group.rg2.name
-#modified protocol and source_address_prefix on 7/25
+
   security_rule {
     name                       = "RDP-In"
     priority                   = 100
@@ -145,33 +117,9 @@ resource "azurerm_network_security_group" "region1-nsg" {
   }
   tags = {
     Environment = var.environment_tag
-    Function    = "AZVM-security"
+    Function    = "region1-spoke-nsg"
   }
 }
-/* DONT UNCOMMENT
-#NSG Association to all Lab Subnets
-
-resource "azurerm_subnet_network_security_group_association" "vnet1-snet1" {
-  subnet_id                 = azurerm_subnet.region1-vnet1-snet1.id
-  network_security_group_id = azurerm_network_security_group.region1-nsg.id
-}
-resource "azurerm_subnet_network_security_group_association" "vnet1-snet2" {
-  subnet_id                 = azurerm_subnet.region1-vnet1-snet2.id
-  network_security_group_id = azurerm_network_security_group.region1-nsg.id
-}
-resource "azurerm_subnet_network_security_group_association" "vnet1-snet3" {
-  subnet_id                 = azurerm_subnet.region1-vnet1-snet3.id
-  network_security_group_id = azurerm_network_security_group.region1-nsg.id
-}
-resource "azurerm_subnet_network_security_group_association" "vnet2-snet1" {
-  subnet_id                 = azurerm_subnet.region1-vnet2-snet1.id
-  network_security_group_id = azurerm_network_security_group.region1-nsg.id
-}
-resource "azurerm_subnet_network_security_group_association" "vnet2-snet2" {
-  subnet_id                 = azurerm_subnet.region1-vnet2-snet2.id
-  network_security_group_id = azurerm_network_security_group.region1-nsg.id
-}
-*/
 
 #Create KeyVault ID
 resource "random_id" "kvname" {
@@ -181,10 +129,10 @@ resource "random_id" "kvname" {
 #Keyvault Creation
 data "azurerm_client_config" "current" {}
 resource "azurerm_key_vault" "kv1" {
-  depends_on                  = [azurerm_resource_group.rg2] #change to rg2
+  depends_on                  = [azurerm_resource_group.rg2]
   name                        = random_id.kvname.hex
   location                    = var.loc1
-  resource_group_name         = var.azure-rg-2 #change to rg2
+  resource_group_name         = var.azure-rg-2
   enabled_for_disk_encryption = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
   soft_delete_retention_days  = 7
@@ -210,13 +158,13 @@ resource "azurerm_key_vault" "kv1" {
   }
   tags = {
     Environment = var.environment_tag
-    Function    = "AZVM-security"
+    Function    = "AZVM-keyvault-1"
   }
-  #added 7/25
+  
   network_acls {
     default_action = "Deny"
     bypass = "AzureServices"
-    ip_rules = ["100.36.177.117"] #added 7/25
+    ip_rules = ["100.36.177.117"]
   }
 }
 
@@ -230,157 +178,12 @@ resource "azurerm_key_vault_secret" "vmpassword" {
   name         = "vmpassword"
   value        = random_password.vmpassword.result
   key_vault_id = azurerm_key_vault.kv1.id
-  content_type = "password" #added 07/25
-  expiration_date = "2022-12-30T20:00:00Z" #added 7/25
+  content_type = "password"
+  expiration_date = "2022-12-30T20:00:00Z"
   depends_on   = [azurerm_key_vault.kv1]
 }
-/*
-# TESTING VAULT - DISABLED 7/27
 
-#Key Vault for Disk Encryption - Added 7/26
-# TESTING VAULT - DISABLED 7/28
-#Create KeyVault ID
-resource "random_id" "kvname2" {
-  byte_length = 5
-  prefix      = "keyvault"
-}
-#Keyvault Creation
-data "azurerm_client_config" "current2" {}
-resource "azurerm_key_vault" "kv2" {
-  depends_on                  = [azurerm_resource_group.rg2] #change to rg2
-  name                        = random_id.kvname2.hex
-  location                    = var.loc1
-  resource_group_name         = var.azure-rg-2 #change to rg2
-  enabled_for_disk_encryption = true
-  tenant_id                   = data.azurerm_client_config.current2.tenant_id
-  soft_delete_retention_days  = 7
-  purge_protection_enabled    = false #change to false
-
-  sku_name = "standard"
-
-  access_policy {
-    tenant_id = data.azurerm_client_config.current2.tenant_id
-    object_id = data.azurerm_client_config.current2.object_id
-
-    key_permissions = [
-      "Get",
-    ]
-
-    secret_permissions = [
-      "Get", "Backup", "Delete", "List", "Purge", "Recover", "Restore", "Set",
-    ]
-
-    storage_permissions = [
-      "Get",
-    ]
-  }
-  tags = {
-    Environment = var.environment_tag
-    Function    = "AZVM-DE"
-  }
-  #added 7/25
-  network_acls {
-    default_action = "Deny"
-    bypass = "AzureServices"
-    ip_rules = ["100.36.177.117"] #added 7/25
-  }
-}
-
-# Disk Encryption Key Vault - EOL (Working. Create random name for vault)
-
-
-#Azure Disk Encryption Set - Added 7/25
-
-resource "azurerm_key_vault_key" "des-key" {
-  name         = "des-vm-key"
-  key_vault_id = azurerm_key_vault.kv2.id
-  key_type     = "RSA-HSM"
-  key_size     = 2048
-  expiration_date = "2022-12-30T20:00:00Z" #added 7/26
-
-  depends_on = [
-    azurerm_key_vault_access_policy.encrypt-disk
-  ]
-
-  key_opts = [
-    "decrypt",
-    "encrypt",
-    "sign",
-    "unwrapKey",
-    "verify",
-    "wrapKey",
-  ]
-}
-#change to key_vault_key_id to reflect des vault
-resource "azurerm_disk_encryption_set" "des-encryptset" {
-  name                = "des"
-  resource_group_name = var.azure-rg-2 
-  location            = var.loc1
-  key_vault_key_id    = azurerm_key_vault.kv2.id
-
-  identity {
-    type = "SystemAssigned"
-  }
-}
-#change to key_vault_id to reflect des vault
-resource "azurerm_key_vault_access_policy" "encrypt-disk" {
-  key_vault_id = azurerm_key_vault.kv2.id
-
-  tenant_id = azurerm_disk_encryption_set.des-encryptset.identity.0.tenant_id
-  object_id = azurerm_disk_encryption_set.des-encryptset.identity.0.principal_id
-
-  key_permissions = [
-    "Create",
-    "Delete",
-    "Get",
-    "Purge",
-    "Recover",
-    "Update",
-    "List",
-    "Decrypt",
-    "Sign"
-  ]
-}
-#change to key_vault_id to reflect des vault
-resource "azurerm_key_vault_access_policy" "accesspolicy-user" {
-  key_vault_id = azurerm_key_vault.kv2.id
-
-  tenant_id = data.azurerm_client_config.current2.tenant_id
-  object_id = data.azurerm_client_config.current2.object_id
-
-  key_permissions = [
-    "Create",
-    "Delete",
-    "Get",
-    "Purge",
-    "Recover",
-    "Update",
-    "List",
-    "Decrypt",
-    "Sign"
-  ]
-}
-# added disk encryption set - 7/25 EOL
-*/
-/* DONT UNCOMMENT
-#Public IP
-resource "azurerm_public_ip" "region1-dc01-pip" {
-  name                = "region1-dc01-pip"
-  resource_group_name = azurerm_resource_group.rg1.name
-  location            = var.loc1
-  allocation_method   = "Static"
-  sku                 = "Standard"
-
-  tags = {
-    Environment = var.environment_tag
-    Function    = "AZVM-activedirectory"
-  }
-}
-*/
-#TESTING VAULT - DISABLED 7/27
-#DONT UNCOMMENT
-#Public IP
-#Create NIC and associate the Public IP
+#Create NIC and associate the private IP
 resource "azurerm_network_interface" "region1-dc01-nic" {
   name                = "region1-dc01-nic"
   location            = var.loc1
@@ -392,17 +195,17 @@ resource "azurerm_network_interface" "region1-dc01-nic" {
     subnet_id                     = azurerm_subnet.region1-vnet2-snet1.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.1.1.4"
-    #public_ip_address_id          = azurerm_public_ip.region1-dc01-pip.id
   }
 
   tags = {
     Environment = var.environment_tag
-    Function    = "AZVM-activedirectory"
+    Function    = "region1-dc01-nic"
   }
 }
-
+/*
 #Create data disk for NTDS storage
 resource "azurerm_managed_disk" "region1-dc01-data" {
+	# checkov:skip=CKV_AZURE_93: AzureDiskEncryption.ps1 will generate a key vault and will encrypt VM once provisioned.
   name                 = "region1-dc01-data"
   location             = var.loc1
   resource_group_name  = azurerm_resource_group.rg2.name
@@ -413,14 +216,16 @@ resource "azurerm_managed_disk" "region1-dc01-data" {
 
   tags = {
     Environment = var.environment_tag
-    Function    = "AZVM-activedirectory"
+    Function    = "region1-dc01-data"
   }
 }
+*/
 #Create Domain Controller VM
 resource "azurerm_windows_virtual_machine" "region1-dc01-vm" {
+	# checkov:skip=CKV_AZURE_50: The extension will be used to import scripts to enable feature for Active Directory Domain Services and setup AD infrastructure.
   name                = "region1-dc01-vm"
   depends_on          = [azurerm_key_vault.kv1]
-  resource_group_name = azurerm_resource_group.rg2.name #change to rg2
+  resource_group_name = azurerm_resource_group.rg2.name
   location            = var.loc1
   size                = var.vmsize-domaincontroller
   admin_username      = var.adminusername
@@ -431,13 +236,12 @@ resource "azurerm_windows_virtual_machine" "region1-dc01-vm" {
 
   tags = {
     Environment = var.environment_tag
-    Function    = "AZVM-activedirectory"
+    Function    = "region1-dc01-vm"
   }
 
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "StandardSSD_LRS"
-    #disk_encryption_set_id = azurerm_disk_encryption_set.des-encryptset.id #added 7/25
 
   }
 
@@ -448,6 +252,7 @@ resource "azurerm_windows_virtual_machine" "region1-dc01-vm" {
     version   = "latest"
   }
 }
+/*
 #Attach Data Disk to Virtual Machine
 resource "azurerm_virtual_machine_data_disk_attachment" "region1-dc01-data" {
   managed_disk_id    = azurerm_managed_disk.region1-dc01-data.id
@@ -456,11 +261,12 @@ resource "azurerm_virtual_machine_data_disk_attachment" "region1-dc01-data" {
   lun                = "10"
   caching            = "None"
 }
+*/
 #Run setup script on dc01-vm - Domain Controller scripts
 resource "azurerm_virtual_machine_extension" "region1-dc01-setup" {
   name                 = "AZVM-dc01-setup"
   virtual_machine_id   = azurerm_windows_virtual_machine.region1-dc01-vm.id
-  depends_on           = [azurerm_virtual_machine_data_disk_attachment.region1-dc01-data]
+  #depends_on           = [azurerm_virtual_machine_data_disk_attachment.region1-dc01-data]
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
   type_handler_version = "1.9"
@@ -480,7 +286,7 @@ resource "azurerm_virtual_machine_extension" "region1-dc01-setup" {
   SETTINGS
 }
 
-#Test powershell script
+#Azure Disk Encryption script
 resource "null_resource" "AzureDiskEncrypt" {
     depends_on = [azurerm_resource_group.rg2]
     triggers = {
@@ -493,9 +299,7 @@ resource "null_resource" "AzureDiskEncrypt" {
     }
 }
 
-
-#Azure Firewall Setup - Added 7/14
-#Public IP
+#Public IP for Azure Firewall
 resource "azurerm_public_ip" "region1-fw01-pip" {
   name                = "region1-fw01-pip"
   resource_group_name = azurerm_resource_group.rg1.name
@@ -505,7 +309,7 @@ resource "azurerm_public_ip" "region1-fw01-pip" {
 
   tags = {
     Environment = var.environment_tag
-    Function    = "AZFW-PubicIP"
+    Function    = "region1-fw01-pip"
   }
 }
 #Firewall Instance
@@ -515,7 +319,7 @@ resource "azurerm_firewall" "region1-fw01" {
   resource_group_name = azurerm_resource_group.rg1.name
   sku_name            = "AZFW_VNet"
   sku_tier            = "Premium"
-  depends_on          = [azurerm_firewall_policy.region1-fw-pol01]
+  #depends_on          = [azurerm_firewall_policy.region1-fw-pol01]
   
   
   ip_configuration {
@@ -527,13 +331,13 @@ resource "azurerm_firewall" "region1-fw01" {
 
 #Classic Rules
 resource "azurerm_firewall_nat_rule_collection" "specific-range-rules" {
-  name                = "specific-range-firewall-rules"
+  name                = "RDP"
   azure_firewall_name = azurerm_firewall.region1-fw01.name
   resource_group_name = azurerm_resource_group.rg1.name
   priority            = 100
   action              = "Dnat"
   rule {
-    name                  = "specific-range-firewall-rules"
+    name                  = "RDP"
     source_addresses      = ["*"]
     destination_addresses = [azurerm_public_ip.region1-fw01-pip.ip_address]
     destination_ports     = ["3389"]
@@ -543,51 +347,10 @@ resource "azurerm_firewall_nat_rule_collection" "specific-range-rules" {
   }
 }
 /*
-resource "azurerm_firewall_network_rule_collection" "specific-destination-rules2" {
-  name                = "specific-destination-firewall-rules2"
-  azure_firewall_name = azurerm_firewall.region1-fw01.name
-  resource_group_name = azurerm_resource_group.rg1.name
-  priority            = 101
-  action              = "Allow"
-  rule {
-    name                  = "specific-range-firewall-rules"
-    source_addresses      = ["10.0.0.0/16"]
-    destination_addresses = ["10.10.100.1/32"]
-    destination_ports     = ["3389"]
-    protocols             = ["TCP"]
-  }
-}
-*/
-# TESTING VAULT - DISABLED 7/27
 #Firewall Policy
 resource "azurerm_firewall_policy" "region1-fw-pol01" {
   name                = "region1-firewall-policy01"
   resource_group_name = azurerm_resource_group.rg1.name
   location            = var.loc1
 }
-/*
-# Firewall Policy Rules
-resource "azurerm_firewall_policy_rule_collection_group" "region1-policy1" {
-  name               = "region1-policy1"
-  firewall_policy_id = azurerm_firewall_policy.region1-fw-pol01.id
-  priority           = 100
-
-  application_rule_collection {
-    name     = "blocked_websites1"
-    priority = 500
-    action   = "Deny"
-    rule {
-      name = "malicious"
-      protocols {
-        type = "Http"
-        port = 80
-      }
-      protocols {
-        type = "Https"
-        port = 443
-      }
-      source_addresses  = ["*"]
-      destination_fqdns = ["defcon.org"]
-    }
-  }
 */
