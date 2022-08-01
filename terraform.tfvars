@@ -8,19 +8,11 @@ region1-vnet1-address-space = "10.0.0.0/16"
 region1-vnet2-address-space = "10.1.0.0/16"
 region1-vnet1-snet1-name    = "region1-vnet1-snet-1"
 region1-vnet1-snetfw-name   = "AzureFirewallSubnet"
-/*
-region1-vnet1-snet2-name    = "region1-vnet1-snet-infra2"
-region1-vnet1-snet3-name    = "region1-vnet1-snet-infra3"
-*/
 region1-vnet2-snet1-name    = "region1-vnet2-snet-1"
 region1-vnet2-snet2-name    = "region1-vnet2-snet-2"
 region1-vnet2-snet3-name    = "region1-vnet2-snet-3"
 region1-vnet1-snet1-range   = "10.0.1.0/24"
 region1-vnet1-snetfw-range  = "10.0.254.0/24"
-/*
-region1-vnet1-snet2-range   = "10.10.2.0/24"
-region1-vnet1-snet3-range   = "10.10.3.0/24"
-*/
 region1-vnet2-snet1-range   = "10.1.1.0/24"
 region1-vnet2-snet2-range   = "10.1.2.0/24"
 region1-vnet2-snet3-range   = "10.1.3.0/24"

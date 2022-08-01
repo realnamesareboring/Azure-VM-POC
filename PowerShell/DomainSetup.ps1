@@ -1,13 +1,13 @@
 Import-Module ADDSDeployment
 Install-ADDSForest `
 -CreateDnsDelegation:$false `
--DatabasePath "E:\windows\NTDS" `
+-DatabasePath "C:\windows\NTDS" `
 -DomainMode "WinThreshold" `
 -DomainName "test.lab" `
 -DomainNetbiosName "test" `
 -ForestMode "WinThreshold" `
 -InstallDns:$true `
--LogPath "E:\windows\NTDS" `
+-LogPath "C:\windows\NTDS" `
 -NoRebootOnCompletion:$false `
--SysvolPath "E:\windows\SYSVOL" `
+-SysvolPath "C:\windows\SYSVOL" `
 -Force:$true
