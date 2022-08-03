@@ -202,24 +202,7 @@ resource "azurerm_network_interface" "region1-dc01-nic" {
     Function    = "region1-dc01-nic"
   }
 }
-/*
-#Create data disk for NTDS storage
-resource "azurerm_managed_disk" "region1-dc01-data" {
-	# checkov:skip=CKV_AZURE_93: AzureDiskEncryption.ps1 will generate a key vault and will encrypt VM once provisioned.
-  name                 = "region1-dc01-data"
-  location             = var.loc1
-  resource_group_name  = azurerm_resource_group.rg2.name
-  storage_account_type = "StandardSSD_LRS"
-  create_option        = "Empty"
-  disk_size_gb         = "20"
-  max_shares           = "2"
 
-  tags = {
-    Environment = var.environment_tag
-    Function    = "region1-dc01-data"
-  }
-}
-*/
 #Create Domain Controller VM
 resource "azurerm_windows_virtual_machine" "region1-dc01-vm" {
 	# checkov:skip=CKV_AZURE_50: The extension will be used to import scripts to enable feature for Active Directory Domain Services and setup AD infrastructure.
@@ -252,21 +235,11 @@ resource "azurerm_windows_virtual_machine" "region1-dc01-vm" {
     version   = "latest"
   }
 }
-/*
-#Attach Data Disk to Virtual Machine
-resource "azurerm_virtual_machine_data_disk_attachment" "region1-dc01-data" {
-  managed_disk_id    = azurerm_managed_disk.region1-dc01-data.id
-  depends_on         = [azurerm_windows_virtual_machine.region1-dc01-vm]
-  virtual_machine_id = azurerm_windows_virtual_machine.region1-dc01-vm.id
-  lun                = "10"
-  caching            = "None"
-}
-*/
+
 #Run setup script on dc01-vm - Domain Controller scripts
 resource "azurerm_virtual_machine_extension" "region1-dc01-setup" {
   name                 = "AZVM-dc01-setup"
   virtual_machine_id   = azurerm_windows_virtual_machine.region1-dc01-vm.id
-  #depends_on           = [azurerm_virtual_machine_data_disk_attachment.region1-dc01-data]
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
   type_handler_version = "1.9"
@@ -319,7 +292,6 @@ resource "azurerm_firewall" "region1-fw01" {
   resource_group_name = azurerm_resource_group.rg1.name
   sku_name            = "AZFW_VNet"
   sku_tier            = "Premium"
-  #depends_on          = [azurerm_firewall_policy.region1-fw-pol01]
   
   
   ip_configuration {
@@ -346,11 +318,3 @@ resource "azurerm_firewall_nat_rule_collection" "specific-range-rules" {
     protocols             = ["TCP"]
   }
 }
-/*
-#Firewall Policy
-resource "azurerm_firewall_policy" "region1-fw-pol01" {
-  name                = "region1-firewall-policy01"
-  resource_group_name = azurerm_resource_group.rg1.name
-  location            = var.loc1
-}
-*/

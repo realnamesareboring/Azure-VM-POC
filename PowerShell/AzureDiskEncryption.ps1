@@ -1,5 +1,4 @@
-﻿#Working!
-Import-Module Az.KeyVault
+﻿Import-Module Az.KeyVault
 $vm = "region1-dc01-vm"
 $rg = "region1-eastus2-spoke"
 
@@ -9,6 +8,7 @@ $kvname = "azvmdevault" + $random
 New-AzKeyvault -name $kvname -ResourceGroupName $rg -Location eastus2 -EnabledForDiskEncryption -ErrorAction SilentlyContinue
 
 $KeyVault = Get-AzKeyVault -VaultName $kvname -ResourceGroupName $rg
+#Perform disk encryption after resource group is created
 do
 {
     $check = TRY
